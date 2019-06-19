@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="_xsrf" content="<<<.xsrf_token>>>">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><<<.title>>></title>
+    <!--ionicons-->
+    <link rel="stylesheet" href="/static/iconicons/ionicons.min.css">
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-image: linear-gradient(to top, #09203f 0%, #537895 100%);
+            overflow: hidden;
+            font-size: 16px;
+        }
+
+        .videoBg {
+            position: fixed;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: .1;
+            z-index: -100;
+        }
+
+        input, button {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            outline: none;
+        }
+
+        .login {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .login .row {
+            position: relative;
+            margin-bottom: 20px;
+            width: 300px;
+            overflow: hidden;
+        }
+
+        .login .row .title {
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .login .row .icon {
+            position: absolute;
+            top: 0;
+            line-height: 35px;
+            left: 10px;
+            width: 20px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .login .row.input::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 26, 81, .5);
+            transform: translate(-100%);
+            transition: all .5s;
+        }
+
+        .login .row.input:hover::after {
+            transform: translate(0);
+        }
+
+        .login .row input {
+            width: 100%;
+            line-height: 35px;
+            padding-left: 40px;
+            box-sizing: border-box;
+            background: none;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, .3);
+        }
+
+        .login .row input::-webkit-input-placeholder {
+            text-indent: .3em;
+            font-size: .8rem;
+            color: #eee;
+            font-weight: 300;
+        }
+
+        .login .row button {
+            cursor: pointer;
+            width: 100%;
+            line-height: 35px;
+            color: #fff;
+            background: #66b1ff;
+            border-radius: .5em;
+            box-shadow: 0 0 20px rgba(0, 0, 0, .3);
+        }
+
+        .login .row button:hover {
+            background: #55a0ee;
+        }
+
+        .login .row.check input {
+            width: 60%;
+        }
+
+        .login .row.check img {
+            display: block;
+            position: absolute;
+            background: #fff;
+            bottom: 0;
+            right: 0;
+            height: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<video class="videoBg" src="/static/video/Travaho.webm" autoplay loop muted></video>
+<div class="login">
+    <div class="row">
+        <h1 class="title"><<<.subject>>></h1>
+    </div>
+    <div class="row input">
+        <i class="icon ion-md-person"></i>
+        <input id="username" type="text" autocomplete="off" placeholder="<<<.username>>>">
+    </div>
+    <div class="row input">
+        <i class="icon ion-md-lock"></i>
+        <input id="password" type="password" autocomplete="new-password" placeholder="<<<.password>>>">
+    </div>
+    <div class="row check">
+        <i class="icon ion-md-checkbox"></i>
+        <input id="checkNum" type="text" placeholder="<<<.checkNum>>>">
+        <<<create_captcha>>>
+    </div>
+    <div class="row">
+        <button type="button" id="submit"><<<.login>>></button>
+    </div>
+</div>
+<script src="/static/js/jquery.js"></script>
+
+<script>
+    let ajax = $.ajax;
+    $.extend({
+        ajax: function (url, options) {
+            if (typeof url === 'object') {
+                options = url;
+                url = undefined;
+            }
+            options = options || {};
+            url = options.url;
+            var xsrftoken = $('meta[name=_xsrf]').attr('content');
+            var headers = options.headers || {};
+            var domain = document.domain.replace(/\./ig, '\\.');
+            if (!/^(http:|https:).*/.test(url) || eval('/^(http:|https:)\\/\\/(.+\\.)*' + domain + '.*/').test(url)) {
+                headers = $.extend(headers, {'X-Xsrftoken': xsrftoken});
+            }
+            options.headers = headers;
+            return ajax(url, options);
+        }
+    });
+
+    $("#submit").click(function () {
+        let parameter = JSON.stringify({
+            "name": $("#username").val(),
+            "pass": $("#password").val(),
+            "code": $("#checkNum").val(),
+            "captchid": $("input[name='captcha_id']").val(),
+        });
+        $.ajax({
+            url: "/user/login",
+            type: "post",
+            contentType: 'application/json',
+            dataType: 'json',
+            data: parameter,
+            success: function (xhr) {
+                // 成功
+                if (xhr.code == 200) {
+                    window.location = "/home"
+                }
+                // 验证码错误
+                else if (xhr.code === 401) {
+                    alert(xhr.message);
+                    $(".captcha img").click();
+                    $("#checkNum").val('').focus();
+                }
+                // 账号密码错误
+                else {
+                    alert(xhr.message);
+                    $(".captcha img").click();
+                    $("#password,#checkNum").val('');
+                    $("#password").focus();
+                }
+            },
+            error: function (xhr) {
+            }
+        });
+    })
+</script>
+</body>
+</html>
